@@ -1,40 +1,87 @@
-from discord.ext import commands
+```from time import sleep
+
 import discord
-import random
 
-bot = commands.Bot(command_prefix='.', intents=discord.Intents.all())
+from discord import app_commands 
 
-@bot.event
-async def on_ready():
-    print("Bot is online and ready to use")
+import cloudscraper as cs
 
-#gold-FFFB00
-#purple-FFFB00
-#redish-FF0078
-@bot.command()
-async def roulette(ctx, round_id):
-    round_id = str(round_id)
-    round_length = len(round_id)
-    if round_length == 36:
-        predictions = ['red','red','red','purple','purple','purple','gold']
-        prediction = random.choice(predictions)
-        if prediction == 'red':
-            embed_color = 0xFF0036
-            color_text = 'Red'
-            prediction = ":red_square:"
-        elif prediction == 'purple':
-            embed_color = 0xAE00FF
-            color_text = 'Purple'
-            prediction = ":purple_square:"
-        elif prediction == 'purple':
-            embed_color = 0xFFFB00
-            color_text = 'Gold'
-            prediction = ":yellow_square:"
-        em = discord.Embed(color=embed_color)
-        em.add_field(name="Roulette Predictor", value=color_text + "\n" + prediction)
-        em.set_footer(text="Made by geek")
-        await ctx.send(embed=em)
-    else:
-        await ctx.send("Invalid round id")
+class aclient(discord.Client):
 
-bot.run('MTAzNTUxMzg1OTc3MzAzODY1Mw.GoWdTA.v1oyHeIMkD9LWx1NauO2HYsOsbW-hg6DgigOTU')
+    def __init__(self):
+
+        super().__init__(intents = discord.Intents.default())
+
+        self.synced = False
+
+    async def on_ready(self):
+
+        await self.wait_until_ready()
+
+        if not self.synced:
+
+            await tree.sync()
+
+            self.synced = True
+
+        print(f"We have logged in as {self.user}.")
+
+client = aclient()
+
+tree = app_commands.CommandTree(client)
+
+scraper = cs.create_scraper()
+
+@tree.command( name = 'roulette', description='roulette predictor') 
+
+async def slash2(interaction: discord.Interaction):
+
+    try:
+
+        a = scraper.get('https://api.bloxflip.com/games/roulette').json()['history'][0]['winningColor']
+
+        b = scraper.get('https://api.bloxflip.com/games/roulette').json()['history'][1]['winningColor']
+
+        c = scraper.get('https://api.bloxflip.com/games/roulette').json()['history'][2]['winningColor']
+
+        past_Games = a,b,c
+
+        print(past_Games)
+
+        rCount = past_Games.count("red")
+
+        pCount = past_Games.count("purple")
+
+        rChance = 100 - (rCount * 25)
+
+        pChance = 100 - (pCount * 25)
+
+        if rChance == 100:
+
+            rChance -= 10
+
+        elif pChance == 100:
+
+            pChance -= 10
+
+        print(f"Red {rChance}")
+
+        print(f"Purple {pChance}")
+
+        if rChance > pChance:
+
+            em = discord.Embed(title=f'Prediction: Red\nChance: {rChance}%', color=0xff3525)
+
+            await interaction.response.send_message(embed=em)
+
+        elif pChance > rChance:
+
+            em = discord.Embed(title=f'Prediction: Purple\nChance: {pChance}%', color=0x9900ff)
+
+            await interaction.response.send_message(embed=em)
+
+    except:
+
+        await interaction.response.send_message("Failed to send request try command again")
+
+client.run('MTAzNTUxMzg1OTc3MzAzODY1Mw.GoWdTA.v1oyHeIMkD9LWx1NauO2HYsOsbW-hg6DgigOTU')
